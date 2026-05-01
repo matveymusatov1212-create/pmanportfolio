@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Studio / Vis</title>
+<title>pman design</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Space+Mono&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Manrope:wght@300;400;500;600&family=Space+Mono&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -21,16 +21,30 @@
   --muted:   #9a9590;
   --accent:  #c04a1a;
   --mono:    'Space Mono', monospace;
+  --sans:    'Manrope', sans-serif;
   --serif:   'EB Garamond', Georgia, serif;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bot: env(safe-area-inset-bottom, 0px);
+}
+
+/* Manrope for all UI text */
+.topbar-studio, .topbar-right,
+.row-meta-cell, .row-meta-cell .meta-val,
+.row-view, .row-arrow,
+.proj-back, .proj-topbar-mid, .proj-topbar-idx,
+.spec-cell, .spec-val, .spec-key,
+.proj-cat, .nav-item,
+.slide-counter, .slide-ph-lbl,
+.gallery-dots,
+.proj-task-lbl {
+  font-family: var(--sans) !important;
 }
 
 html, body {
   height: 100%; width: 100%;
   background: var(--bg);
   color: var(--black);
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 10px;
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
@@ -79,9 +93,8 @@ html, body {
   position: absolute; bottom: -4px; left: 8px;
   font-family: var(--mono);
   font-size: clamp(56px, 20vw, 88px);
-  line-height: 0.85; color: var(--accent); opacity: 0.88;
+  line-height: 0.85; color: #F0965A; opacity: 1;
   letter-spacing: -0.04em; pointer-events: none;
-  mix-blend-mode: multiply;
 }
 
 .row-tag {
@@ -120,8 +133,8 @@ html, body {
   display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;
 }
 .row-title-text {
-  font-family: var(--serif); font-size: 19px; font-weight: 400;
-  line-height: 1.25; color: var(--dark); font-style: italic; flex: 1;
+  font-family: var(--sans); font-size: 15px; font-weight: 400;
+  line-height: 1.25; color: var(--dark); font-style: normal; flex: 1;
 }
 .row-arrow { font-family: var(--mono); font-size: 13px; color: var(--muted); margin-top: 2px; }
 
@@ -207,9 +220,9 @@ html, body {
 
 .proj-body { padding: 20px 14px 0; }
 .proj-cat { font-family:var(--mono);font-size:8px;text-transform:uppercase;letter-spacing:.2em;color:var(--accent);margin-bottom:10px; }
-.proj-title { font-family:var(--serif);font-size:27px;font-weight:400;line-height:1.15;color:var(--dark);margin-bottom:22px; }
+.proj-title { font-family:var(--sans);font-size:22px;font-weight:500;line-height:1.15;color:var(--dark);margin-bottom:22px; }
 .proj-task-lbl { font-family:var(--mono);font-size:8px;text-transform:uppercase;letter-spacing:.16em;color:var(--muted);margin-bottom:10px;display:block; }
-.proj-task-text { font-family:var(--serif);font-size:15px;line-height:1.8;color:var(--mid); }
+.proj-task-text { font-family:var(--sans);font-size:13px;font-weight:300;line-height:1.8;color:var(--mid); }
 .proj-spacer { height: calc(60px + var(--safe-bot)); }
 </style>
 </head>
@@ -218,7 +231,7 @@ html, body {
 <!-- HOME -->
 <div id="screen-home" class="screen active">
   <div class="topbar">
-    <div class="topbar-studio">STUDIO <span>/</span> VIS</div>
+    <div class="topbar-studio">pman <span>/</span> design</div>
     <div class="topbar-right" id="topbar-count">PORTFOLIO · 2024</div>
   </div>
   <div id="projects-list"></div>
@@ -236,7 +249,7 @@ html, body {
 <div id="screen-project" class="screen">
   <div class="proj-topbar">
     <div class="proj-back" id="btn-back">← НАЗАД</div>
-    <div class="proj-topbar-mid">STUDIO / VIS</div>
+    <div class="proj-topbar-mid">pman / design</div>
     <div class="proj-topbar-idx" id="proj-idx-top"></div>
   </div>
   <div id="proj-gallery" class="proj-gallery"></div>
@@ -267,7 +280,7 @@ const PROJECTS = [
     year: "2025", location: "МО, Россия", area: "0 м²",
     software: "Twin / Path tracer", status: "Completed",
     description: "Разработка типового проекта автомобильного навеса под один автомобиль для компании МАФ. Максимальная оптимизация пространсва и материалов позваляет получить современный продукт за оптимальные деньги",
-    cover: "img/02/render1.jpg", images: ["img/02/render2.jpg","img/02/render3.jpg"]
+    cover: "img/02/render1.jpg", images: ["img/02/render1.jpg","img/02/render2.jpg","img/02/render3.jpg"]
   },
   {
     title: "Апартаменты Podbelsky st.",
@@ -276,7 +289,7 @@ const PROJECTS = [
     year: "2026", location: "Владимир", area: "100 м²",
     software: "Twin / Path tracer", status: "Completed",
     description: "Концепция жилого пространства для молодой семьи. Студия трансформирована в трёхкомнатную квартиру с продуманным зонированием. Основной акцент — свет, воздух и тёплые натуральные фактуры.",
-    cover: "img/01/render3.jpg", images: ["img/01/render1.jpg","img/01/render2.jpg","img/01/render4.jpg","img/01/render5.jpg","img/01/render6.jpg","img/01/render7.jpg","img/01/render8.jpg","img/01/render9.jpg","img/01/render10.jpg","img/01/render11.jpg","img/01/render12.jpg","img/01/render13.jpg"]
+    cover: "img/01/render3.jpg", images: ["img/01/render3.jpg","img/01/render1.jpg","img/01/render2.jpg","img/01/render4.jpg","img/01/render5.jpg","img/01/render6.jpg","img/01/render7.jpg","img/01/render8.jpg","img/01/render9.jpg","img/01/render10.jpg","img/01/render11.jpg","img/01/render12.jpg","img/01/render13.jpg"]
   },
   {
     title: 'Автомобильный навес "ДУО"',
@@ -285,7 +298,7 @@ const PROJECTS = [
     year: "2025", location: "МО, Россия", area: "0 м²",
     software: "Twin / Path tracer", status: "Completed",
     description: "Разработка типового проекта автомобильного навеса под два автомобиля для компании МАФ.",
-    cover: "img/03/render1.jpg", images: ["img/03/render2.jpg","img/03/render3.jpg","img/03/render4.jpg"]
+    cover: "img/03/render1.jpg", images: ["img/03/render1.jpg","img/03/render2.jpg","img/03/render3.jpg","img/03/render4.jpg"]
   },
   {
     title: 'Автомобильный навес "ДУО +"',
@@ -294,7 +307,7 @@ const PROJECTS = [
     year: "2025", location: "МО, Россия", area: "0 м²",
     software: "Twin / Path tracer", status: "Completed",
     description: "Разработка типового проекта автомобильного навеса под два автомобиля для компании МАФ.",
-    cover: "img/04/render1.jpg", images: ["img/04/render2.jpg","img/04/render3.jpg","img/04/render4.jpg","img/04/render5.jpg","img/04/render6.jpg"]
+    cover: "img/04/render1.jpg", images: ["img/04/render1.jpg","img/04/render2.jpg","img/04/render3.jpg","img/04/render4.jpg","img/04/render5.jpg","img/04/render6.jpg"]
   },
   {
     title: "Redkino",
@@ -303,7 +316,7 @@ const PROJECTS = [
     year: "2025", location: "МО", area: "200 м²",
     software: "Twin / Path tracer", status: "Completed",
     description: "Комплексное проектирование беседки, террасы и автомобильного навеса. Хозблок выполнен в стиле дома, утеплен, беседка связана с домом через открытую террасу.",
-    cover: "img/05/render1.jpg", images: ["img/05/render6.jpg","img/05/render7.jpg","img/05/render8.jpg","img/05/render9.jpg","img/05/render10.jpg","img/05/render4.jpg","img/05/render3.jpg","img/05/render5.jpg","img/05/render2.jpg"]
+    cover: "img/05/render1.jpg", images: ["img/05/render1.jpg","img/05/render6.jpg","img/05/render7.jpg","img/05/render8.jpg","img/05/render9.jpg","img/05/render10.jpg","img/05/render4.jpg","img/05/render3.jpg","img/05/render5.jpg","img/05/render2.jpg"]
   }
 ];
 
@@ -367,7 +380,7 @@ function renderList() {
 
   if (activeFilter === 'info') {
     list.innerHTML = `
-      <div style="padding:32px 14px;font-family:var(--serif);font-size:17px;line-height:1.8;color:var(--mid);font-style:italic;">
+      <div style="padding:32px 14px;font-family:var(--sans);font-size:14px;font-weight:300;line-height:1.8;color:var(--mid)">
         Здесь можно добавить краткое описание себя, специализацию и контакты.<br><br>
         <span style="font-family:var(--mono);font-size:9px;font-style:normal;letter-spacing:.15em;color:var(--muted);text-transform:uppercase;">
           Отредактируй эту секцию в коде → раздел INFO
