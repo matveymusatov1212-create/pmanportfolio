@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Studio / Vis</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Space+Mono&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:      #f0ece4;
+  --bg2:     #e4ded4;
+  --line:    rgba(0,0,0,0.10);
+  --black:   #0f0e0c;
+  --dark:    #1a1916;
+  --mid:     #4a4540;
+  --muted:   #9a9590;
+  --accent:  #c04a1a;
+  --mono:    'Space Mono', monospace;
+  --serif:   'EB Garamond', Georgia, serif;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bot: env(safe-area-inset-bottom, 0px);
+}
+
+html, body {
+  height: 100%; width: 100%;
+  background: var(--bg);
+  color: var(--black);
+  font-family: var(--mono);
+  font-size: 10px;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+.screen {
+  position: absolute; inset: 0;
+  overflow-y: auto; overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.screen.active { opacity: 1; pointer-events: all; }
+#screen-project { transform: translateX(24px); }
+#screen-project.active { transform: translateX(0); }
+
+/* ── TOP BAR ── */
+.topbar {
+  position: sticky; top: 0; z-index: 20;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+  padding: calc(var(--safe-top) + 10px) 14px 10px;
+  display: flex; justify-content: space-between; align-items: baseline;
+}
+.topbar-studio { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--black); }
+.topbar-studio span { color: var(--muted); }
+.topbar-right  { font-family: var(--mono); font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+
+/* ── PROJECT ROW ── */
+.project-row {
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  overflow: hidden;
+}
+.project-row:active { opacity: 0.85; }
+
+.row-photo {
+  width: 100%; aspect-ratio: 16/10;
+  background: var(--bg2);
+  position: relative; overflow: hidden;
+}
+.row-photo img { width:100%;height:100%;object-fit:cover;display:block; }
+
+.row-num {
+  position: absolute; bottom: -4px; left: 8px;
+  font-family: var(--mono);
+  font-size: clamp(56px, 20vw, 88px);
+  line-height: 0.85; color: var(--accent); opacity: 0.88;
+  letter-spacing: -0.04em; pointer-events: none;
+  mix-blend-mode: multiply;
+}
+
+.row-tag {
+  position: absolute; top: 10px; right: 10px;
+  font-family: var(--mono); font-size: 8px;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--bg); background: rgba(15,14,12,0.50);
+  padding: 3px 8px; backdrop-filter: blur(4px);
+}
+
+.row-photo-placeholder {
+  width:100%;height:100%;
+  display:flex;align-items:center;justify-content:center;
+  background: linear-gradient(135deg, #e8e2d8 0%, #ddd7cc 100%);
+}
+.row-photo-placeholder span {
+  font-family: var(--mono); font-size: 9px;
+  letter-spacing:.18em; color: var(--muted); text-transform:uppercase;
+}
+
+.row-meta {
+  display: grid; grid-template-columns: 1fr 1fr 1fr auto;
+  border-top: 1px solid var(--line);
+}
+.row-meta-cell {
+  padding: 8px 11px; border-right: 1px solid var(--line);
+  font-family: var(--mono); font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em;
+}
+.row-meta-cell:last-child { border-right: none; }
+.meta-label { color: var(--muted); display: block; margin-bottom: 2px; font-size: 8px; }
+.meta-val { color: var(--black); }
+.row-view { padding: 8px 11px; font-family: var(--mono); font-size: 8px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); display: flex; align-items: center; }
+
+.row-title-block {
+  padding: 13px 14px 17px;
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;
+}
+.row-title-text {
+  font-family: var(--serif); font-size: 19px; font-weight: 400;
+  line-height: 1.25; color: var(--dark); font-style: italic; flex: 1;
+}
+.row-arrow { font-family: var(--mono); font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+/* ── BOTTOM NAV ── */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: var(--bg); border-top: 1px solid var(--line);
+  display: flex; padding-bottom: var(--safe-bot); z-index: 30;
+}
+.nav-item {
+  flex:1; display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  padding: 9px 4px; cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  font-family: var(--mono); font-size: 8px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--muted); transition: color 0.2s;
+  gap: 5px; border-right: 1px solid var(--line);
+}
+.nav-item:last-child { border-right: none; }
+.nav-item.active { color: var(--black); }
+.nav-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--accent); opacity: 0; transition: opacity 0.2s; }
+.nav-item.active .nav-dot { opacity: 1; }
+.nav-spacer { height: calc(48px + var(--safe-bot)); }
+
+/* ── PROJECT SCREEN ── */
+.proj-topbar {
+  position: sticky; top: 0; z-index: 20; background: var(--bg);
+  border-bottom: 1px solid var(--line);
+  padding: calc(var(--safe-top) + 10px) 14px 10px;
+  display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px;
+}
+.proj-back {
+  cursor: pointer; font-family: var(--mono); font-size: 9px;
+  text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted);
+  -webkit-tap-highlight-color: transparent;
+}
+.proj-topbar-mid { font-family: var(--mono); font-size: 9px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); text-align: center; }
+.proj-topbar-idx { font-family: var(--mono); font-size: 9px; color: var(--accent); }
+
+.proj-gallery {
+  width: 100%; overflow-x: auto; overflow-y: hidden;
+  scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
+  display: flex; scrollbar-width: none;
+}
+.proj-gallery::-webkit-scrollbar { display: none; }
+
+.gallery-slide {
+  flex: 0 0 100%; scroll-snap-align: start;
+  aspect-ratio: 4/3; background: var(--bg2);
+  position: relative; overflow: hidden;
+}
+.gallery-slide img { width:100%;height:100%;object-fit:cover;display:block; }
+.slide-placeholder {
+  width:100%;height:100%;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:8px;
+  background:linear-gradient(135deg,#e8e2d8,#ddd7cc);
+}
+.slide-ph-num { font-family:var(--mono);font-size:60px;color:var(--accent);opacity:.14;line-height:1; }
+.slide-ph-lbl { font-family:var(--mono);font-size:8px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase; }
+.slide-counter {
+  position:absolute;bottom:10px;right:12px;
+  font-family:var(--mono);font-size:8px;
+  color:var(--bg);background:rgba(15,14,12,.5);
+  padding:3px 8px;letter-spacing:.1em;backdrop-filter:blur(4px);
+}
+
+.gallery-dots { display:flex;justify-content:center;gap:5px;padding:10px 0 0; }
+.dot { width:3px;height:3px;border-radius:50%;background:var(--line);transition:all .2s; }
+.dot.active { background:var(--accent);width:12px;border-radius:2px; }
+
+.proj-specs-row {
+  display:grid;grid-template-columns:1fr 1fr 1fr;
+  border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+  margin-top:14px;
+}
+.spec-cell {
+  padding:10px 13px;border-right:1px solid var(--line);
+  font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.08em;
+}
+.spec-cell:last-child{border-right:none;}
+.spec-key{color:var(--muted);display:block;font-size:8px;margin-bottom:3px;}
+.spec-val{color:var(--black);}
+
+.proj-body { padding: 20px 14px 0; }
+.proj-cat { font-family:var(--mono);font-size:8px;text-transform:uppercase;letter-spacing:.2em;color:var(--accent);margin-bottom:10px; }
+.proj-title { font-family:var(--serif);font-size:27px;font-weight:400;line-height:1.15;color:var(--dark);margin-bottom:22px; }
+.proj-task-lbl { font-family:var(--mono);font-size:8px;text-transform:uppercase;letter-spacing:.16em;color:var(--muted);margin-bottom:10px;display:block; }
+.proj-task-text { font-family:var(--serif);font-size:15px;line-height:1.8;color:var(--mid); }
+.proj-spacer { height: calc(60px + var(--safe-bot)); }
+</style>
+</head>
+<body>
+
+<!-- HOME -->
+<div id="screen-home" class="screen active">
+  <div class="topbar">
+    <div class="topbar-studio">STUDIO <span>/</span> VIS</div>
+    <div class="topbar-right" id="topbar-count">PORTFOLIO · 2024</div>
+  </div>
+  <div id="projects-list"></div>
+  <div class="nav-spacer"></div>
+  <nav class="bottom-nav" id="bottom-nav">
+    <div class="nav-item active" data-filter="all"><div class="nav-dot"></div>INDEX</div>
+    <div class="nav-item" data-filter="ext"><div class="nav-dot"></div>EXT</div>
+    <div class="nav-item" data-filter="int"><div class="nav-dot"></div>INT</div>
+    <div class="nav-item" data-filter="com"><div class="nav-dot"></div>COM</div>
+    <div class="nav-item" data-filter="info"><div class="nav-dot"></div>INFO</div>
+  </nav>
+</div>
+
+<!-- PROJECT -->
+<div id="screen-project" class="screen">
+  <div class="proj-topbar">
+    <div class="proj-back" id="btn-back">← НАЗАД</div>
+    <div class="proj-topbar-mid">STUDIO / VIS</div>
+    <div class="proj-topbar-idx" id="proj-idx-top"></div>
+  </div>
+  <div id="proj-gallery" class="proj-gallery"></div>
+  <div id="gallery-dots" class="gallery-dots"></div>
+  <div class="proj-specs-row" id="proj-specs"></div>
+  <div class="proj-body">
+    <div class="proj-cat"  id="proj-cat"></div>
+    <div class="proj-title" id="proj-title"></div>
+    <span class="proj-task-lbl">ЗАДАЧА ПРОЕКТИРОВАНИЯ</span>
+    <div class="proj-task-text" id="proj-task"></div>
+  </div>
+  <div class="proj-spacer"></div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+//  📁 РЕДАКТИРУЙ ЗДЕСЬ — данные проектов
+//
+//  type:   "ext" = Экстерьер  |  "int" = Интерьер  |  "com" = Коммерческий
+//  images: [] — пути к твоим рендерам, напр.: ["img/01/1.jpg","img/01/2.jpg"]
+//  cover:  "" — обложка (по умолчанию первое из images)
+// ══════════════════════════════════════════════════════════
+const PROJECTS = [
+  {
+    title: 'Автомобильный навес "СОЛО"',
+    subtitle: "МАФ/pman",
+    type: "ext", typeLabel: "EXTERIOR VIS",
+    year: "2025", location: "МО, Россия", area: "0 м²",
+    software: "Twin / Path tracer", status: "Completed",
+    description: "Разработка типового проекта автомобильного навеса под один автомобиль для компании МАФ. Максимальная оптимизация пространсва и материалов позваляет получить современный продукт за оптимальные деньги",
+    cover: "img/02/render1.jpg", images: ["img/02/render2.jpg","img/02/render3.jpg"]
+  },
+  {
+    title: "Апартаменты Podbelsky st.",
+    subtitle: "pman",
+    type: "int", typeLabel: "INTERIOR VIS",
+    year: "2026", location: "Владимир", area: "100 м²",
+    software: "Twin / Path tracer", status: "Completed",
+    description: "Концепция жилого пространства для молодой семьи. Студия трансформирована в трёхкомнатную квартиру с продуманным зонированием. Основной акцент — свет, воздух и тёплые натуральные фактуры.",
+    cover: "img/01/render3.jpg", images: ["img/01/render1.jpg","img/01/render2.jpg","img/01/render4.jpg","img/01/render5.jpg","img/01/render6.jpg","img/01/render7.jpg","img/01/render8.jpg","img/01/render9.jpg","img/01/render10.jpg","img/01/render11.jpg","img/01/render12.jpg","img/01/render13.jpg"]
+  },
+  {
+    title: 'Автомобильный навес "ДУО"',
+    subtitle: "МАФ/pman",
+    type: "ext", typeLabel: "EXTERIOR VIS",
+    year: "2025", location: "МО, Россия", area: "0 м²",
+    software: "Twin / Path tracer", status: "Completed",
+    description: "Разработка типового проекта автомобильного навеса под два автомобиля для компании МАФ.",
+    cover: "img/03/render1.jpg", images: ["img/03/render2.jpg","img/03/render3.jpg","img/03/render4.jpg"]
+  },
+  {
+    title: 'Автомобильный навес "ДУО +"',
+    subtitle: "МАФ/pman",
+    type: "ext", typeLabel: "EXTERIOR VIS",
+    year: "2025", location: "МО, Россия", area: "0 м²",
+    software: "Twin / Path tracer", status: "Completed",
+    description: "Разработка типового проекта автомобильного навеса под два автомобиля для компании МАФ.",
+    cover: "img/04/render1.jpg", images: ["img/04/render2.jpg","img/04/render3.jpg","img/04/render4.jpg","img/04/render5.jpg","img/04/render6.jpg"]
+  },
+  {
+    title: "Redkino",
+    subtitle: "pman",
+    type: "ext", typeLabel: "EXTERIOR VIS",
+    year: "2025", location: "МО", area: "200 м²",
+    software: "Twin / Path tracer", status: "Completed",
+    description: "Комплексное проектирование беседки, террасы и автомобильного навеса. Хозблок выполнен в стиле дома, утеплен, беседка связана с домом через открытую террасу.",
+    cover: "img/05/render1.jpg", images: ["img/05/render6.jpg","img/05/render7.jpg","img/05/render8.jpg","img/05/render9.jpg","img/05/render10.jpg","img/05/render4.jpg","img/05/render3.jpg","img/05/render5.jpg","img/05/render2.jpg"]
+  }
+];
+
+// Telegram
+if (window.Telegram?.WebApp) {
+  Telegram.WebApp.ready();
+  Telegram.WebApp.expand();
+  Telegram.WebApp.setHeaderColor('#f0ece4');
+  Telegram.WebApp.setBackgroundColor('#f0ece4');
+}
+
+let activeFilter = 'all';
+
+function renderList() {
+  const list = document.getElementById('projects-list');
+  list.innerHTML = '';
+  let count = 0;
+
+  PROJECTS.forEach((p, i) => {
+    if (activeFilter !== 'all' && activeFilter !== 'info' && p.type !== activeFilter) return;
+    if (activeFilter === 'info') return;
+    count++;
+    const num = String(i + 1).padStart(2, '0');
+    const src = p.cover || (p.images && p.images[0]) || '';
+
+    const row = document.createElement('div');
+    row.className = 'project-row';
+    row.innerHTML = `
+      <div class="row-photo">
+        ${src
+          ? `<img src="${src}" alt="${p.title}" loading="lazy">`
+          : `<div class="row-photo-placeholder"><span>Ваш рендер здесь</span></div>`}
+        <div class="row-num">VT©${num}</div>
+        <div class="row-tag">${p.typeLabel}</div>
+      </div>
+      <div class="row-meta">
+        <div class="row-meta-cell">
+          <span class="meta-label">ТИП</span>
+          <span class="meta-val">${p.type==='ext'?'RESIDENTIAL':p.type==='int'?'INTERIOR':'COMMERCIAL'}</span>
+        </div>
+        <div class="row-meta-cell">
+          <span class="meta-label">СОФТ</span>
+          <span class="meta-val">${p.software}</span>
+        </div>
+        <div class="row-meta-cell">
+          <span class="meta-label">СТАТУС</span>
+          <span class="meta-val">${p.status}</span>
+        </div>
+        <div class="row-view">VIEW →</div>
+      </div>
+      <div class="row-title-block">
+        <div class="row-title-text">${p.subtitle}</div>
+        <div class="row-arrow">↗</div>
+      </div>`;
+    row.addEventListener('click', () => openProject(i));
+    list.appendChild(row);
+  });
+
+  document.getElementById('topbar-count').textContent =
+    activeFilter === 'info' ? 'INFO' : `PORTFOLIO · ${count} OBJ`;
+
+  if (activeFilter === 'info') {
+    list.innerHTML = `
+      <div style="padding:32px 14px;font-family:var(--serif);font-size:17px;line-height:1.8;color:var(--mid);font-style:italic;">
+        Здесь можно добавить краткое описание себя, специализацию и контакты.<br><br>
+        <span style="font-family:var(--mono);font-size:9px;font-style:normal;letter-spacing:.15em;color:var(--muted);text-transform:uppercase;">
+          Отредактируй эту секцию в коде → раздел INFO
+        </span>
+      </div>`;
+  }
+}
+
+document.getElementById('bottom-nav').addEventListener('click', e => {
+  const item = e.target.closest('.nav-item');
+  if (!item) return;
+  activeFilter = item.dataset.filter;
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  item.classList.add('active');
+  document.getElementById('screen-home').scrollTop = 0;
+  renderList();
+});
+
+function openProject(idx) {
+  const p = PROJECTS[idx];
+  const num = String(idx + 1).padStart(2, '0');
+
+  // Gallery
+  const gallery = document.getElementById('proj-gallery');
+  const dotsEl  = document.getElementById('gallery-dots');
+  gallery.innerHTML = ''; dotsEl.innerHTML = '';
+  const slides = p.images?.length ? p.images : [null, null, null];
+
+  slides.forEach((src, si) => {
+    const slide = document.createElement('div');
+    slide.className = 'gallery-slide';
+    slide.innerHTML = src
+      ? `<img src="${src}" alt="Render ${si+1}" loading="lazy">`
+      : `<div class="slide-placeholder"><div class="slide-ph-num">${num}</div><div class="slide-ph-lbl">Render ${si+1}</div></div>`;
+    const ctr = document.createElement('div');
+    ctr.className = 'slide-counter';
+    ctr.textContent = `${si+1} / ${slides.length}`;
+    slide.appendChild(ctr);
+    gallery.appendChild(slide);
+
+    const dot = document.createElement('div');
+    dot.className = 'dot' + (si===0?' active':'');
+    dotsEl.appendChild(dot);
+  });
+
+  gallery.addEventListener('scroll', () => {
+    const i = Math.round(gallery.scrollLeft / gallery.offsetWidth);
+    dotsEl.querySelectorAll('.dot').forEach((d,j) => d.classList.toggle('active', j===i));
+  }, {passive:true});
+
+  document.getElementById('proj-idx-top').textContent = `${num}/${String(PROJECTS.length).padStart(2,'0')}`;
+  document.getElementById('proj-cat').textContent   = p.typeLabel;
+  document.getElementById('proj-title').textContent = p.title;
+  document.getElementById('proj-task').textContent  = p.description;
+
+  document.getElementById('proj-specs').innerHTML = `
+    <div class="spec-cell"><span class="spec-key">ГОД</span><span class="spec-val">${p.year}</span></div>
+    <div class="spec-cell"><span class="spec-key">ПЛОЩАДЬ</span><span class="spec-val">${p.area}</span></div>
+    <div class="spec-cell"><span class="spec-key">ЛОКАЦИЯ</span><span class="spec-val">${p.location}</span></div>`;
+
+  const home = document.getElementById('screen-home');
+  const proj = document.getElementById('screen-project');
+  home.classList.remove('active');
+  proj.classList.add('active');
+  proj.scrollTop = 0; gallery.scrollLeft = 0;
+
+  if (window.Telegram?.WebApp) {
+    Telegram.WebApp.BackButton.show();
+    Telegram.WebApp.BackButton.onClick(goBack);
+  }
+}
+
+function goBack() {
+  document.getElementById('screen-project').classList.remove('active');
+  document.getElementById('screen-home').classList.add('active');
+  if (window.Telegram?.WebApp) Telegram.WebApp.BackButton.hide();
+}
+
+document.getElementById('btn-back').addEventListener('click', goBack);
+renderList();
+</script>
+</body>
+</html>
