@@ -4,7 +4,27 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>pman design</title>
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://telegram.org/js/telegram-web-app.js">
+function copyToClipboard(text, msg) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => showToast(msg));
+  } else {
+    const el = document.createElement('textarea');
+    el.value = text; el.style.position = 'fixed'; el.style.opacity = '0';
+    document.body.appendChild(el); el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+    showToast(msg);
+  }
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = '✓  ' + msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Manrope:wght@300;400;500;600&family=Space+Mono&display=swap" rel="stylesheet">
@@ -63,7 +83,7 @@ html, body {
 
 /* ── TOP BAR ── */
 .topbar {
-  position: sticky; top: 0; z-index: 20;
+  position: fixed; top: 0; left: 0; right: 0; z-index: 31;
   background: var(--bg);
   border-bottom: 1px solid var(--line);
   padding: calc(var(--safe-top) + 10px) 14px 10px;
@@ -138,26 +158,27 @@ html, body {
 }
 .row-arrow { font-family: var(--mono); font-size: 13px; color: var(--muted); margin-top: 2px; }
 
-/* ── BOTTOM NAV ── */
+/* ── TOP NAV ── */
 .bottom-nav {
-  position: fixed; bottom: 0; left: 0; right: 0;
-  background: var(--bg); border-top: 1px solid var(--line);
-  display: flex; padding-bottom: var(--safe-bot); z-index: 30;
+  position: fixed; top: 38px; left: 0; right: 0;
+  background: var(--bg); border-bottom: 1px solid var(--line);
+  display: flex; z-index: 30;
 }
 .nav-item {
   flex:1; display:flex; flex-direction:column;
   align-items:center; justify-content:center;
-  padding: 9px 4px; cursor:pointer;
+  padding: 11px 4px 9px; cursor:pointer;
   -webkit-tap-highlight-color:transparent;
-  font-family: var(--mono); font-size: 8px; letter-spacing: 0.12em;
+  font-family: var(--sans); font-size: 9.5px; font-weight: 700;
+  letter-spacing: 0.10em;
   text-transform: uppercase; color: var(--muted); transition: color 0.2s;
   gap: 5px; border-right: 1px solid var(--line);
 }
 .nav-item:last-child { border-right: none; }
-.nav-item.active { color: var(--black); }
-.nav-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--accent); opacity: 0; transition: opacity 0.2s; }
+.nav-item.active { color: var(--black); font-weight: 800; }
+.nav-dot { width: 4px; height: 4px; border-radius: 50%; background: #F0965A; opacity: 0; transition: opacity 0.2s; }
 .nav-item.active .nav-dot { opacity: 1; }
-.nav-spacer { height: calc(48px + var(--safe-bot)); }
+.nav-spacer { height: calc(82px + var(--safe-top)); }
 
 /* ── PROJECT SCREEN ── */
 .proj-topbar {
@@ -224,6 +245,18 @@ html, body {
 .proj-task-lbl { font-family:var(--mono);font-size:8px;text-transform:uppercase;letter-spacing:.16em;color:var(--muted);margin-bottom:10px;display:block; }
 .proj-task-text { font-family:var(--sans);font-size:13px;font-weight:300;line-height:1.8;color:var(--mid); }
 .proj-spacer { height: calc(60px + var(--safe-bot)); }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: var(--black); color: #fff;
+  font-family: var(--sans); font-size: 12px; font-weight: 500;
+  padding: 10px 20px; border-radius: 24px;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.25s, transform 0.25s;
+  white-space: nowrap; z-index: 999;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 </style>
 </head>
 <body>
@@ -234,8 +267,6 @@ html, body {
     <div class="topbar-studio">pman <span>/</span> design</div>
     <div class="topbar-right" id="topbar-count">PORTFOLIO · 2024</div>
   </div>
-  <div id="projects-list"></div>
-  <div class="nav-spacer"></div>
   <nav class="bottom-nav" id="bottom-nav">
     <div class="nav-item active" data-filter="all"><div class="nav-dot"></div>INDEX</div>
     <div class="nav-item" data-filter="ext"><div class="nav-dot"></div>EXT</div>
@@ -243,6 +274,8 @@ html, body {
     <div class="nav-item" data-filter="com"><div class="nav-dot"></div>COM</div>
     <div class="nav-item" data-filter="info"><div class="nav-dot"></div>INFO</div>
   </nav>
+  <div class="nav-spacer"></div>
+  <div id="projects-list"></div>
 </div>
 
 <!-- PROJECT -->
@@ -414,11 +447,11 @@ function renderList() {
             <div style="margin-left:auto;color:var(--muted);font-size:14px;">↗</div>
           </a>
 
-          <a href="tel:+79046582994" style="
+          <div onclick="copyToClipboard('+79046582994', 'Номер скопирован!')" style="
             display:flex;align-items:center;gap:14px;
             padding:14px 16px;
             background:#fff;border:1px solid var(--line);border-radius:4px;
-            text-decoration:none;
+            cursor:pointer;
             -webkit-tap-highlight-color:transparent;
           ">
             <div style="width:38px;height:38px;border-radius:50%;background:#F0965A;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
@@ -428,14 +461,14 @@ function renderList() {
               <div style="font-size:11px;font-weight:500;color:var(--black);margin-bottom:2px;">Телефон</div>
               <div style="font-size:11px;font-weight:300;color:var(--muted);">+7 904 658 2994</div>
             </div>
-            <div style="margin-left:auto;color:var(--muted);font-size:14px;">↗</div>
-          </a>
+            <div style="margin-left:auto;color:var(--muted);font-size:14px;">⎘</div>
+          </div>
 
-          <a href="mailto:pman.33zzz@gmail.com" style="
+          <div onclick="copyToClipboard('pman.33zzz@gmail.com', 'Email скопирован!')" style="
             display:flex;align-items:center;gap:14px;
             padding:14px 16px;
             background:#fff;border:1px solid var(--line);border-radius:4px;
-            text-decoration:none;
+            cursor:pointer;
             -webkit-tap-highlight-color:transparent;
           ">
             <div style="width:38px;height:38px;border-radius:50%;background:#F0965A;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
@@ -445,8 +478,8 @@ function renderList() {
               <div style="font-size:11px;font-weight:500;color:var(--black);margin-bottom:2px;">Email</div>
               <div style="font-size:11px;font-weight:300;color:var(--muted);">pman.33zzz@gmail.com</div>
             </div>
-            <div style="margin-left:auto;color:var(--muted);font-size:14px;">↗</div>
-          </a>
+            <div style="margin-left:auto;color:var(--muted);font-size:14px;">⎘</div>
+          </div>
 
           <a href="https://www.youtube.com/@pmaaan7" target="_blank" style="
             display:flex;align-items:center;gap:14px;
@@ -564,6 +597,28 @@ function goBack() {
 
 document.getElementById('btn-back').addEventListener('click', goBack);
 renderList();
+
+function copyToClipboard(text, msg) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => showToast(msg));
+  } else {
+    const el = document.createElement('textarea');
+    el.value = text; el.style.position = 'fixed'; el.style.opacity = '0';
+    document.body.appendChild(el); el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+    showToast(msg);
+  }
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = '✓  ' + msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
 </script>
+
+<div class="toast" id="toast"></div>
 </body>
 </html>
